@@ -6,43 +6,42 @@
 #' @importFrom jsonlite read_json (or substitute with appropriate package and function)
 #' @return A tibble with dataset title, authors, publication year, and DOI link
 #' @examples
-#' search_datasets(c("butterfly", "temperature"), max_results = 10)
+#' search_datasets(c("climate", "butterfly"), 50)
 #' @export
 
-search_datasets <- function(keyword, max_results = 50) {
+search_datasets <- function(keyword, max_results = 100) {
+
+  # construct the API URL by inserting key word(s) for search
   url <- httr::modify_url(
     "https://datadryad.org/api/v2/search",
-    query = list(q = keyword)
-  )
+    query = list(q = paste(keyword, collapse = " "), # collapse multiple keywords into one string separated by space
+                 per_page = max_results) # number of results to return on one page
+  ) # note that the API can only handle a single string value for the q parameter
+
+  # send an HTTP GET request to the URL we built, store response
   response <- httr::GET(url)
 
+  # check if the response is an error, if so return empty table and a warning
   if (httr::http_error(response)) {
     warning("Failed to connect to Dryad API.")
     return(tibble::tibble())
   }
 
-  json <- httr::content(response, as = "text", encoding = "UTF-8")
-  parsed <- jsonlite::fromJSON(json, flatten = TRUE)
+  json <- httr::content(response, as = "text", encoding = "UTF-8") # extract content in response into JSON-format string
+  parsed <- jsonlite::fromJSON(json, flatten = TRUE) # convert JSON into a nested list/dataframe
 
-  # correct nested location
+  # get the actual dataset entries from nested JSON object (parsed)
   data <- parsed$`_embedded`$`stash:datasets`
 
   if (length(data) == 0) {
     message("No datasets found.")
     return(tibble::tibble())
-  }
+  } # if no result, return empty tibble and message
 
+  # build a tibble with the extracted content
   tibble::tibble(
     title = data$title,
-    authors = purrr::map_chr(data$authors, function(author_df) {
-      if (is.null(author_df) || is.atomic(author_df) || is.character(author_df)) {
-        return(NA_character_)
-      }
-      if (!"fullName" %in% names(author_df)) {
-        return(NA_character_)
-      }
-      paste(author_df$fullName, collapse = ", ")
-    }),
+    authors = data$author,
     year = data$publicationDate,
     doi = data$identifier,
     methods = data$methods
