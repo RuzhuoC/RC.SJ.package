@@ -3,4 +3,3 @@
 export(download_dataset)
 export(search_datasets)
 export(search_method)
-importFrom(jsonlite,fromJSON)
