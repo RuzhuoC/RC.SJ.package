@@ -39,7 +39,7 @@ search_datasets <- function(keyword, max_results = 100) {
   } # if no result, return empty tibble and message
 
   # build a tibble with the extracted content
-  result <-
+  search_result <-
     tibble::tibble(
       title = data$title,
       authors = data$author,
@@ -48,9 +48,10 @@ search_datasets <- function(keyword, max_results = 100) {
       methods = data$methods,
       abstract = data$abstract
     )[1:min(max_results, nrow(data)), ]
-  print(result)
-  return(invisible(result))
+
+  return(search_result)
 }
+
 
 #' @title Search for datasets that use a specific method
 #' @description
@@ -62,14 +63,17 @@ search_datasets <- function(keyword, max_results = 100) {
 #' @examples
 #' search_datasets("climate", 50) |> search_method(c("experiment", "heatwave"))
 #' @export
-#'
 
 search_method <- function(result, keywords, match_all = FALSE) {
 
   filtered <- dplyr::filter(result, !is.na(methods) | !is.na(abstract)) # filter for rows where either methods or abstract is not NA
   combined_content <- paste(filtered$methods, filtered$abstract, sep = " ") # combine methods & abstract into one string
   search_pattern <- paste(keywords, collapse = if (match_all) ".*" else "|") # create a regex string for searching
-  filtered[stringr::str_detect(combined_content, regex(search_pattern, ignore_case = TRUE)), ]
+
+  method_result <-
+    filtered[stringr::str_detect(combined_content, regex(search_pattern, ignore_case = TRUE)), ]
+
+  return(method_result)
 }
 
 
@@ -79,19 +83,14 @@ search_method <- function(result, keywords, match_all = FALSE) {
 #' @param results A tibble with a 'doi' column.
 #' @return A character vector of file paths that were downloaded.
 #' @examples
-#' search_datasets("climate", 10) |>
-#'   search_method("experiment") |>
+#' search_datasets(c("climate", "butterfly"), max_results = 10) |>
+#'   search_method(c("experiment", "heatwave"), match_all = FALSE) |>
 #'   download_dataset()
 #' @export
 
 download_dataset <- function(result) {
 
   dir <- "." # defalt save to current working directory
-
-  # # check that 'doi' column exists
-  # if (!"doi" %in% names(result)) {
-  #   stop("Input must include a 'doi' column.")
-  # }
 
   # create empty character vector to store the file paths of downloaded files, with length equal to # rows in result
   downloaded <- character(nrow(result))
@@ -115,5 +114,20 @@ download_dataset <- function(result) {
 
     downloaded[i] <- if (success) file_path else NA_character_ # stores the file path in the downloaded vector if the download succeeded
   }
-  return(downloaded)
+
+  success_indices <- which(!is.na(downloaded)) # identify successful downloads
+
+  if (length(success_indices) > 0) {
+    message("✅ Successfully downloaded ", length(success_indices), " dataset(s):")
+  } else {
+    message("❌ No datasets were successfully downloaded.")
+  }
+
+  # return a tibble of successfully downloaded datasets
+  tibble::tibble(
+    title = result$title[success_indices],
+    doi   = result$doi[success_indices],
+    file  = downloaded[success_indices]
+  )
+
 }
