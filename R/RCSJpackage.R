@@ -3,7 +3,6 @@
 #' Given a keyword or phrase, the `search_datasets()` function queries the Dryad API and returns metadata for matching datasets in the form of a tibble. Each row in the result includes the dataset title, authors, publication year, DOI, and methods section (if available).
 #' @param keyword A character vector of keywords or phrases to search for.
 #' @param max_results Maximum number of results to return
-#' @importFrom jsonlite fromJSON
 #' @return A tibble with dataset title, authors, publication year, and DOI link
 #' @examples
 #' search_datasets(c("climate", "butterfly"), 50)
@@ -14,7 +13,7 @@ search_datasets <- function(keyword, max_results = 100) {
   # construct the API URL by inserting key word(s) for search
   url <- httr::modify_url(
     "https://datadryad.org/api/v2/search",
-    query = list(q = paste(keyword, collapse = " "), # collapse multiple keywords into one string separated by space
+    query = list(q = paste(keyword, collapse = " "), # collapse multiple keywords into one string
                  per_page = max_results) # number of results to return on one page
   ) # note that the API can only handle a single string value for the q parameter
 
@@ -78,7 +77,7 @@ search_method <- function(result, keywords, match_all = FALSE) {
   # check whether the regex pattern is found in each string, and filter on "filtered" tibble
   method_result <-
     filtered[stringr::str_detect(combined_content,
-                                 regex(search_pattern,
+                                 stringr::regex(search_pattern,
                                        ignore_case = TRUE)), # ignore difference between upper and lowercase
              ]
 
