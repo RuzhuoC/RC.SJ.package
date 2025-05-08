@@ -12,8 +12,14 @@ To install the development version of `RC.SJ.package` from your local
 machine:
 
 ``` r
-# From inside the package root directory
+# Install the devtools package if needed
+install.packages("devtools")
+
+# For developers working inside the package directory
 devtools::install()
+
+# For package users
+devtools::install_github("RuzhuoC/RC.SJ.package")
 ```
 
 ## Example Usage
