@@ -1,0 +1,63 @@
+---
+title: "Working with the Dryad Dataset Search Package"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Working with the Dryad Dataset Search Package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Overview
+This vignette demonstrates how to search for datasets on the Dryad repository using keywords, filter based on methods, and download dataset files for further analysis.
+
+## Workflow
+
+### 1. Load the Package
+Make sure package is loaded.
+
+```{r setup}
+# Load your package
+library(RC.SJ.package)
+```
+
+### 2. Search Dryad for Datasets
+Use `search_datasets()` to query the Dryad API for datasets that contain specific keywords.
+
+```{r}
+results <- search_datasets(keyword = c("climate", "butterfly"), max_results = 50)
+
+# Preview the results
+head(results)
+```
+
+Each result includes the dataset's title, authors, publication year, DOI, abstract, and methods section (if available).
+
+### 3. Filter Datasets by Method
+Use `search_method()` to filter datasets that include specific keywords in the methods or abstract fields.
+
+```{r}
+filtered <-search_method(results, keywords = c("experiment, heatwave"), match_all = FALSE)
+
+# View filtered results
+filtered
+```
+
+If you would like results that contain all keywrods, use `match_all = TRUE`.
+
+### 4. Download Dataset Files
+Use `download_dataset()` to download the selected datasets (in .zip format) to your working directory.
+
+```{r}
+downloads <- download_dataset(filtered)
+
+# View file paths to downloaded files
+downloads
+```
+
+Each file is saved with a name related to its DOI. The function will issue a warning if a download fails.
+
+### Notes
+- All downloads will go to your current working directory.
+- `max_results` caps how many results you retrieve from the Dryad API (deafult = 100)
+- Some datasets do not include method sections, fitering will skip them
+- This package uses base R and tidyverse packages like httr, jsonlite, dplyr, and stringr
