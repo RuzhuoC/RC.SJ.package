@@ -140,9 +140,9 @@ download_dataset <- function(result) {
 
   # display message and return a tibble of successfully downloaded datasets
   if (length(success_indices) > 0) {
-    message("✅ Successfully downloaded ", length(success_indices), " dataset(s):")
+    message("Successfully downloaded ", length(success_indices), " dataset(s):")
   } else {
-    message("❌ No datasets were successfully downloaded.")
+    message("No datasets were successfully downloaded.")
   }
 
   tibble::tibble(
