@@ -97,6 +97,15 @@ search_method <- function(result, keywords, match_all = FALSE) {
 #' @export
 
 download_dataset <- function(result) {
+  # stop if invalid input (input not a data frame)
+  if (!is.data.frame(result)) {
+    stop("Input must be a data frame")
+  }
+  if (nrow(result) == 0) {
+    message("No datasets to download")
+    return(invisible(NULL))
+  }
+
 
   # set download destination to current working directory
   dir <- "."
